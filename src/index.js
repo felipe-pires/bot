@@ -14,7 +14,7 @@ const process = {
         let gains = 0;
         let losses = 0;
 
-        for(let i = closes.lenght - 14; i < closes.lenght; i++){
+        for(let i = closes.length - 14; i < closes.length; i++){
             const diff = closes[i] - closes[i - 1];
 
             if(diff >= 0){
@@ -43,24 +43,25 @@ const process = {
         status = "N/A";
         const [response] = await axios.all(endpoints.map(endpoint => axios.get(endpoint)));
         const candle = response.data[499];
-        const closes = response.data.map(allCandles => allCandles[4]);
+        const closes =response.data.map(allCandles => allCandles[4]);
         const rsi = process._calcRSI(closes);
         const price = parseFloat(candle[4]);
-        const balanceFormatter = process._priceFormatter(balance, 'USD');
         const priceFormatter = process._priceFormatter(price, 'USD');
-        const data = {rsi, price: priceFormatter, time: new Date().toISOString(), balance : balanceFormatter,status};
 
         if(rsi >= 70 && bought <= 2){
             status = 'Sobrecomprado';
             balance += price;
         }
-        if(rsi >= 70 && bought > 2){
+        if(rsi <= 30 && bought > 2){
             status = 'Limite Alcançado';
         }
-        if(price <= 30 && balance > 0 && price > balance){
+        if(rsi <= 30 && balance > 0 && price < balance){
             status = 'Sobrevendido';
             balance-= price;
         }
+
+        const balanceFormatter = process._priceFormatter(balance, 'USD');
+        const data = {rsi, price: priceFormatter, time: new Date().toISOString(), balance : balanceFormatter,status};
 
         console.table(data);
         process._exportJson();
